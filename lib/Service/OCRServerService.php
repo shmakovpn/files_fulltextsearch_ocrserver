@@ -31,10 +31,16 @@ use OC\Files\View;
 use OCP\Files\File;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
-use OCA\Files_FullTextSearch\Model\FilesDocument;
-use OCA\FullTextSearch\Model\IndexDocument;
-use OCA\FullTextSearch\Model\SearchRequest;
+#use OCA\Files_FullTextSearch\Model\FilesDocument;
+use OCP\Files_FullTextSearch\Model\AFilesDocument;
+#use OCA\FullTextSearch\Model\IndexDocument;
+use OCP\FullTextSearch\Model\IIndexDocument;
+#use OCA\FullTextSearch\Model\SearchRequest;
+use OCP\FullTextSearch\Model\ISearchRequest;
 use Symfony\Component\EventDispatcher\GenericEvent;
+
+
+
 /**
  * Class OCRService
  *
@@ -84,7 +90,7 @@ class OCRServerService {
         if (!$file instanceof File) {
             return;
         }
-        /** @var \OCP\Files_FullTextSearch\Model\FilesDocument $document */
+        /** @var \OCP\Files_FullTextSearch\Model\AFilesDocument $document */
         $document = $e->getArgument('document');
         $this->extractContentUsingOCRServer($document, $file);
     }
@@ -93,13 +99,14 @@ class OCRServerService {
      */
     public function onSearchRequest(GenericEvent $e) {
         /** @var ISearchRequest $file */
-        // do nothing 2019-06-04
+        $request = $e->getArgument('request');
+        $request->addPart('ocr');
     }
     /**
-     * @param FilesDocument $document
+     * @param AFilesDocument $document
      * @param File $file
      */
-    private function extractContentUsingOCRServer(FilesDocument &$document, File $file) {
+    private function extractContentUsingOCRServer(AFilesDocument &$document, File $file) {
         try {
             if(preg_match("/^_RECOGNIZED_/i", $file->getName())) {
                 return;
@@ -216,7 +223,7 @@ class OCRServerService {
         } catch (Exception $e) {
             return;
         }
-        $document->setContent(base64_encode($content), IndexDocument::ENCODED_BASE64);
+        $document->setContent(base64_encode($content), IIndexDocument::ENCODED_BASE64);
     }
 
     /**
